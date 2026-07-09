@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meseszövő Tábor — Galéria</title>
+<style>
+  :root{
+    --paper:#fbf6ec;
+    --ink:#2b2620;
+    --sun:#e8a33d;
+    --leaf:#4f7a5c;
+    --clay:#c0603f;
+    --line:#e2d8c3;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Georgia', 'Iowan Old Style', serif;
+    line-height:1.5;
+  }
+  header{
+    padding:56px 20px 36px;
+    text-align:center;
+    border-bottom:1px solid var(--line);
+  }
+  header .eyebrow{
+    font-family:'Trebuchet MS', sans-serif;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-size:.72rem;
+    color:var(--leaf);
+    margin-bottom:10px;
+  }
+  header h1{
+    margin:0;
+    font-size:clamp(2rem, 5vw, 3.1rem);
+    font-weight:400;
+    letter-spacing:.01em;
+  }
+  header p{
+    font-family:'Trebuchet MS', sans-serif;
+    color:#6b6355;
+    font-size:.95rem;
+    margin-top:10px;
+  }
+  main{
+    max-width:1100px;
+    margin:0 auto;
+    padding:40px 20px 80px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(210px, 1fr));
+    gap:22px;
+  }
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:4px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 10px 24px rgba(43,38,32,.10);
+  }
+  .thumb{
+    position:relative;
+    width:100%;
+    aspect-ratio:4/3;
+    background:#efe8d6;
+    cursor:pointer;
+    overflow:hidden;
+  }
+  .thumb img, .thumb video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .badge{
+    position:absolute;
+    top:8px;
+    left:8px;
+    background:var(--clay);
+    color:#fff;
+    font-family:'Trebuchet MS', sans-serif;
+    font-size:.65rem;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    padding:3px 8px;
+    border-radius:3px;
+  }
+  .card-foot{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 12px;
+    font-family:'Trebuchet MS', sans-serif;
+  }
+  .card-foot .name{
+    font-size:.72rem;
+    color:#8a8172;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .dl{
+    flex-shrink:0;
+    margin-left:8px;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    text-decoration:none;
+    font-size:.75rem;
+    color:var(--leaf);
+    border:1px solid var(--leaf);
+    padding:5px 10px;
+    border-radius:20px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .dl:hover{
+    background:var(--leaf);
+    color:#fff;
+  }
+  /* lightbox */
+  .lightbox{
+    position:fixed;
+    inset:0;
+    background:rgba(20,18,14,.92);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:30px;
+    z-index:50;
+  }
+  .lightbox.open{display:flex;}
+  .lightbox-inner{
+    max-width:min(90vw, 1000px);
+    max-height:85vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+  .lightbox img, .lightbox video{
+    max-width:100%;
+    max-height:70vh;
+    border-radius:4px;
+  }
+  .lightbox .close{
+    position:absolute;
+    top:20px;
+    right:28px;
+    color:#fbf6ec;
+    font-size:2rem;
+    background:none;
+    border:none;
+    cursor:pointer;
+    line-height:1;
+  }
+  .lightbox .dl{
+    color:var(--paper);
+    border-color:var(--paper);
+  }
+  .lightbox .dl:hover{
+    background:var(--paper);
+    color:var(--ink);
+  }
+  footer{
+    text-align:center;
+    padding:30px 20px 50px;
+    font-family:'Trebuchet MS', sans-serif;
+    font-size:.8rem;
+    color:#9a917f;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Meseszövő tábor</div>
+  <h1>Nyári emlékek</h1>
+  <p>Kattints egy képre a nagyításhoz, vagy a letöltés gombra a mentéshez.</p>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="lightbox" id="lightbox">
+  <button class="close" id="closeBtn" aria-label="Bezárás">&times;</button>
+  <div class="lightbox-inner" id="lightboxInner"></div>
+</div>
+
+<footer>© Meseszövő tábor galéria</footer>
+
+<script>
+  // Ide kerül minden fájl, amit a "web mesesz0v0 tabor" mappában találtunk.
+  const files = [
+    "20260703_102740.jpg",
+    "20260703_102807.jpg",
+    "20260703_103430.mp4",
+    "20260703_103435.jpg",
+    "20260703_103438.jpg",
+    "20260703_103729.jpg",
+    "20260703_104055.jpg",
+    "20260703_104113.jpg",
+    "20260703_104119.jpg",
+    "20260703_104259.jpg",
+    "20260703_104449.jpg",
+    "20260703_104843.jpg",
+    "20260703_105034.jpg",
+    "20260703_105035.jpg",
+    "20260703_105506.jpg",
+    "20260703_105707.jpg",
+    "20260703_105756.jpg",
+    "20260703_105913.jpg",
+    "20260703_110204.jpg",
+    "20260703_110228.jpg",
+    "20260703_110230.jpg",
+    "20260703_110244.jpg",
+    "20260703_154950.jpg",
+    "20260703_154954.jpg"
+  ];
+
+  const grid = document.getElementById('grid');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxInner = document.getElementById('lightboxInner');
+  const closeBtn = document.getElementById('closeBtn');
+
+  function isVideo(name){
+    return name.toLowerCase().endsWith('.mp4');
+  }
+
+  files.forEach(name => {
+    const video = isVideo(name);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb';
+
+    if(video){
+      const badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = 'Videó';
+      thumb.appendChild(badge);
+
+      const v = document.createElement('video');
+      v.src = name;
+      v.muted = true;
+      v.playsInline = true;
+      v.preload = 'metadata';
+      thumb.appendChild(v);
+    } else {
+      const img = document.createElement('img');
+      img.src = name;
+      img.loading = 'lazy';
+      img.alt = name;
+      thumb.appendChild(img);
+    }
+
+    thumb.addEventListener('click', () => openLightbox(name, video));
+
+    const foot = document.createElement('div');
+    foot.className = 'card-foot';
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'name';
+    nameEl.textContent = name;
+
+    const dl = document.createElement('a');
+    dl.className = 'dl';
+    dl.href = name;
+    dl.download = name;
+    dl.textContent = '⬇ Letöltés';
+
+    foot.appendChild(nameEl);
+    foot.appendChild(dl);
+
+    card.appendChild(thumb);
+    card.appendChild(foot);
+    grid.appendChild(card);
+  });
+
+  function openLightbox(name, video){
+    lightboxInner.innerHTML = '';
+
+    const media = document.createElement(video ? 'video' : 'img');
+    media.src = name;
+    if(video){
+      media.controls = true;
+      media.autoplay = true;
+    } else {
+      media.alt = name;
+    }
+    lightboxInner.appendChild(media);
+
+    const dl = document.createElement('a');
+    dl.className = 'dl';
+    dl.href = name;
+    dl.download = name;
+    dl.textContent = '⬇ Letöltés eredeti méretben';
+    lightboxInner.appendChild(dl);
+
+    lightbox.classList.add('open');
+  }
+
+  closeBtn.addEventListener('click', () => {
+    lightbox.classList.remove('open');
+    lightboxInner.innerHTML = '';
+  });
+  lightbox.addEventListener('click', (e) => {
+    if(e.target === lightbox){
+      lightbox.classList.remove('open');
+      lightboxInner.innerHTML = '';
+    }
+  });
+</script>
+
+</body>
+</html>
