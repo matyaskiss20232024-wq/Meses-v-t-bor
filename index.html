@@ -51,6 +51,76 @@
     margin:0 auto;
     padding:40px 20px 80px;
   }
+
+  /* --- mappa nézet --- */
+  .folder-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+    gap:24px;
+  }
+  .folder-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:34px 20px;
+    text-align:center;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+    font-family:'Trebuchet MS', sans-serif;
+  }
+  .folder-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 10px 24px rgba(43,38,32,.10);
+  }
+  .folder-icon{
+    font-size:2.4rem;
+    margin-bottom:10px;
+  }
+  .folder-card h2{
+    margin:0 0 4px;
+    font-family:'Georgia', serif;
+    font-size:1.5rem;
+    font-weight:400;
+  }
+  .folder-card .count{
+    color:#8a8172;
+    font-size:.8rem;
+  }
+  .folder-card.empty{
+    opacity:.55;
+    cursor:default;
+  }
+
+  /* --- galéria nézet --- */
+  .gallery-header{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:26px;
+    font-family:'Trebuchet MS', sans-serif;
+  }
+  .back-btn{
+    background:none;
+    border:1px solid var(--leaf);
+    color:var(--leaf);
+    padding:7px 14px;
+    border-radius:20px;
+    cursor:pointer;
+    font-size:.85rem;
+    font-family:'Trebuchet MS', sans-serif;
+    transition:background .15s ease, color .15s ease;
+  }
+  .back-btn:hover{
+    background:var(--leaf);
+    color:#fff;
+  }
+  .gallery-header h2{
+    margin:0;
+    font-family:'Georgia', serif;
+    font-weight:400;
+    font-size:1.7rem;
+  }
+
   .grid{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(210px, 1fr));
@@ -172,6 +242,12 @@
     background:var(--paper);
     color:var(--ink);
   }
+  .empty-msg{
+    font-family:'Trebuchet MS', sans-serif;
+    color:#8a8172;
+    text-align:center;
+    padding:60px 20px;
+  }
   footer{
     text-align:center;
     padding:30px 20px 50px;
@@ -186,14 +262,18 @@
 <header>
   <div class="eyebrow">Meseszövő tábor</div>
   <h1>Nyári emlékek</h1>
-  <p>Kattints egy képre a nagyításhoz, vagy a letöltés gombra a mentéshez.</p>
-  <p>Ha szeretne képeket vagy olyan vidokat amiket nem talál itt a galériában, akkor kérjük
-    forduljon a tábor vezetökhöz.
-  </p>
+  <p id="subtitle">Válassz egy mappát a képek és videók megtekintéséhez.</p>
 </header>
 
 <main>
-  <div class="grid" id="grid"></div>
+  <div id="folderView" class="folder-grid"></div>
+  <div id="galleryView" style="display:none;">
+    <div class="gallery-header">
+      <button class="back-btn" id="backBtn">← Vissza a mappákhoz</button>
+      <h2 id="galleryTitle"></h2>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
 </main>
 
 <div class="lightbox" id="lightbox">
@@ -204,34 +284,44 @@
 <footer>© Meseszövő tábor galéria</footer>
 
 <script>
-  // Ide kerül minden fájl, amit a "web mesesz0v0 tabor" mappában találtunk.
-  const files = [
-    "20260703_102740.jpg",
-    "20260703_102807.jpg",
-    "20260703_103435.jpg",
-    "20260703_103438.jpg",
-    "20260703_103729.jpg",
-    "20260703_104055.jpg",
-    "20260703_104113.jpg",
-    "20260703_104119.jpg",
-    "20260703_104259.jpg",
-    "20260703_104449.jpg",
-    "20260703_104843.jpg",
-    "20260703_105034.jpg",
-    "20260703_105035.jpg",
-    "20260703_105506.jpg",
-    "20260703_105707.jpg",
-    "20260703_105756.jpg",
-    "20260703_105913.jpg",
-    "20260703_110204.jpg",
-    "20260703_110228.jpg",
-    "20260703_110230.jpg",
-    "20260703_110244.jpg",
-    "20260703_154950.jpg",
-    "20260703_154954.jpg",
-  ];
+  const folders = {
+    "2026": [
+      "20260703_102740.jpg",
+      "20260703_102807.jpg",
+      "20260703_103430.mp4",
+      "20260703_103435.jpg",
+      "20260703_103438.jpg",
+      "20260703_103729.jpg",
+      "20260703_104055.jpg",
+      "20260703_104113.jpg",
+      "20260703_104119.jpg",
+      "20260703_104259.jpg",
+      "20260703_104449.jpg",
+      "20260703_104843.jpg",
+      "20260703_105034.jpg",
+      "20260703_105035.jpg",
+      "20260703_105506.jpg",
+      "20260703_105707.jpg",
+      "20260703_105756.jpg",
+      "20260703_105913.jpg",
+      "20260703_110204.jpg",
+      "20260703_110228.jpg",
+      "20260703_110230.jpg",
+      "20260703_110244.jpg",
+      "20260703_154950.jpg",
+      "20260703_154954.jpg"
+    ],
+    "2027": [
+      // ide kerülnek majd a 2027-es fájlnevek, pl. "20270703_120000.jpg"
+    ]
+  };
 
+  const folderView = document.getElementById('folderView');
+  const galleryView = document.getElementById('galleryView');
   const grid = document.getElementById('grid');
+  const galleryTitle = document.getElementById('galleryTitle');
+  const subtitle = document.getElementById('subtitle');
+  const backBtn = document.getElementById('backBtn');
   const lightbox = document.getElementById('lightbox');
   const lightboxInner = document.getElementById('lightboxInner');
   const closeBtn = document.getElementById('closeBtn');
@@ -240,7 +330,60 @@
     return name.toLowerCase().endsWith('.mp4');
   }
 
-  files.forEach(name => {
+  // --- mappa kártyák felépítése ---
+  function buildFolderView(){
+    folderView.innerHTML = '';
+    Object.keys(folders).forEach(folderName => {
+      const items = folders[folderName];
+      const card = document.createElement('div');
+      card.className = 'folder-card' + (items.length === 0 ? ' empty' : '');
+
+      const icon = document.createElement('div');
+      icon.className = 'folder-icon';
+      icon.textContent = '📁';
+
+      const title = document.createElement('h2');
+      title.textContent = folderName;
+
+      const count = document.createElement('div');
+      count.className = 'count';
+      count.textContent = items.length === 0 ? 'nincs feltöltve fájl' : `${items.length} fájl`;
+
+      card.appendChild(icon);
+      card.appendChild(title);
+      card.appendChild(count);
+
+      if(items.length > 0){
+        card.addEventListener('click', () => openFolder(folderName));
+      }
+
+      folderView.appendChild(card);
+    });
+  }
+
+  function openFolder(folderName){
+    const items = folders[folderName];
+    galleryTitle.textContent = folderName;
+    subtitle.textContent = `${folderName} mappa — kattints egy elemre a nagyításhoz, vagy a letöltés gombra a mentéshez.`;
+    grid.innerHTML = '';
+
+    if(items.length === 0){
+      const msg = document.createElement('div');
+      msg.className = 'empty-msg';
+      msg.textContent = 'Ebben a mappában még nincs fájl.';
+      grid.appendChild(msg);
+    } else {
+      items.forEach(name => {
+        const path = `${folderName}/${name}`;
+        grid.appendChild(buildCard(path, name));
+      });
+    }
+
+    folderView.style.display = 'none';
+    galleryView.style.display = 'block';
+  }
+
+  function buildCard(path, name){
     const video = isVideo(name);
 
     const card = document.createElement('div');
@@ -256,20 +399,20 @@
       thumb.appendChild(badge);
 
       const v = document.createElement('video');
-      v.src = name;
+      v.src = path;
       v.muted = true;
       v.playsInline = true;
       v.preload = 'metadata';
       thumb.appendChild(v);
     } else {
       const img = document.createElement('img');
-      img.src = name;
+      img.src = path;
       img.loading = 'lazy';
       img.alt = name;
       thumb.appendChild(img);
     }
 
-    thumb.addEventListener('click', () => openLightbox(name, video));
+    thumb.addEventListener('click', () => openLightbox(path, name, video));
 
     const foot = document.createElement('div');
     foot.className = 'card-foot';
@@ -280,7 +423,7 @@
 
     const dl = document.createElement('a');
     dl.className = 'dl';
-    dl.href = name;
+    dl.href = path;
     dl.download = name;
     dl.textContent = '⬇ Letöltés';
 
@@ -289,14 +432,14 @@
 
     card.appendChild(thumb);
     card.appendChild(foot);
-    grid.appendChild(card);
-  });
+    return card;
+  }
 
-  function openLightbox(name, video){
+  function openLightbox(path, name, video){
     lightboxInner.innerHTML = '';
 
     const media = document.createElement(video ? 'video' : 'img');
-    media.src = name;
+    media.src = path;
     if(video){
       media.controls = true;
       media.autoplay = true;
@@ -307,7 +450,7 @@
 
     const dl = document.createElement('a');
     dl.className = 'dl';
-    dl.href = name;
+    dl.href = path;
     dl.download = name;
     dl.textContent = '⬇ Letöltés eredeti méretben';
     lightboxInner.appendChild(dl);
@@ -315,16 +458,20 @@
     lightbox.classList.add('open');
   }
 
-  closeBtn.addEventListener('click', () => {
+  closeBtn.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (e) => { if(e.target === lightbox) closeLightbox(); });
+  function closeLightbox(){
     lightbox.classList.remove('open');
     lightboxInner.innerHTML = '';
+  }
+
+  backBtn.addEventListener('click', () => {
+    galleryView.style.display = 'none';
+    folderView.style.display = 'grid';
+    subtitle.textContent = 'Válassz egy mappát a képek és videók megtekintéséhez.';
   });
-  lightbox.addEventListener('click', (e) => {
-    if(e.target === lightbox){
-      lightbox.classList.remove('open');
-      lightboxInner.innerHTML = '';
-    }
-  });
+
+  buildFolderView();
 </script>
 
 </body>
